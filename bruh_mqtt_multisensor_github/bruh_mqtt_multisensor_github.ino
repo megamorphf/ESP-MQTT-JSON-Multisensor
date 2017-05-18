@@ -16,11 +16,6 @@
 #define mqtt_port 1883
 
 
-/************* MQTT TOPICS (change these topics as you wish)  **************************/
-#define light_state_topic "bruh/sensornode1"
-#define light_set_topic "bruh/sensornode1/set"
-
-
 
 /**************************** FOR OTA **************************************************/
 #define SENSORNAME "hermes-node"
@@ -82,20 +77,12 @@ void setup() {
 
   ArduinoOTA.setPassword((const char *)OTApassword);
 
-  Serial.print("calibrating sensor ");
-  for (int i = 0; i < calibrationTime; i++) {
-    Serial.print(".");
-    delay(1000);
-  }
-
   Serial.println("Starting Node named " + String(SENSORNAME));
-
 
   setup_wifi();
 
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-
 
   ArduinoOTA.onStart([]() {
     Serial.println("Starting");
@@ -181,13 +168,10 @@ void reconnect() {
   }
 }
 
-
-
 /********************************** START CHECK SENSOR **********************************/
 bool checkBoundSensor(float newValue, float prevValue, float maxDiff) {
   return newValue < prevValue - maxDiff || newValue > prevValue + maxDiff;
 }
-
 
 /********************************** START MAIN LOOP***************************************/
 void loop() {
