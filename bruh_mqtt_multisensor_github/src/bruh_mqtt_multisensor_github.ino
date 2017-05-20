@@ -98,6 +98,7 @@ void setup() {
   Serial.print("IPess: ");
   Serial.println(WiFi.localIP());
 
+  bmpInit();
 }
 
 /********************************** START SETUP WIFI*****************************************/
