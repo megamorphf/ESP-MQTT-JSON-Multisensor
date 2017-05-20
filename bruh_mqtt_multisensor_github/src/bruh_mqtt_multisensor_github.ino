@@ -9,7 +9,7 @@
 
 /************ WIFI and MQTT INFORMATION (CHANGE THESE FOR YOUR SETUP) ******************/
 #define wifi_ssid "ssid" //type your WIFI information inside the quotes
-#define wifi_password "ssidpassword"
+#define wifi_password "ssidpass"
 #define mqtt_server "192.168.0.105"
 #define mqtt_user "username"
 #define mqtt_password "password"
@@ -30,9 +30,13 @@ int OTAport = 8266;
 
 float diffTEMP = 0.2;
 float tempValue;
+float tempPreciseValue;
 
 float diffHUM = 1;
 float humValue;
+
+float diffPressure = 1.0;
+float pressureValue;
 
 
 char message_buff[100];
@@ -98,7 +102,7 @@ void setup() {
   Serial.print("IPess: ");
   Serial.println(WiFi.localIP());
 
-  bmpInit();
+ bmpInit();
 }
 
 /********************************** START SETUP WIFI*****************************************/
@@ -132,6 +136,8 @@ void sendState() {
 
   root["humidity"] = (String)humValue;
   root["temperature"] = (String)tempValue;
+  root["temp_precise"] = (String)tempPreciseValue;
+  root["pressure"] = (String)pressureValue;
 
   char buffer[root.measureLength() + 1];
   root.printTo(buffer, sizeof(buffer));
@@ -165,6 +171,8 @@ bool checkBoundSensor(float newValue, float prevValue, float maxDiff) {
 }
 
 /********************************** START MAIN LOOP***************************************/
+
+
 void loop() {
 
   ArduinoOTA.handle();
@@ -176,6 +184,17 @@ void loop() {
 
   float newTempValue = dht.readTemperature();
   float newHumValue = dht.readHumidity();
+  float newPressure = readPressure() / 100.00; //Converting Pa -> mbar
+  float newTempPrecise = readTemperature();
+  //float newPressureSea = readSealevelPressure();
+
+  Serial.println("==== BEGIN ====");
+  Serial.println(newHumValue);
+  Serial.println(newTempValue);
+  Serial.println(newTempPrecise);
+  Serial.println(newPressure);
+  //Serial.println(newPressureSea);
+  Serial.println("==== END ====");
 
   delay(100);
 
@@ -188,5 +207,19 @@ void loop() {
     humValue = newHumValue;
     sendState();
   }
+
+
+  if (checkBoundSensor(newPressure, pressureValue, diffPressure)) {
+    pressureValue = newPressure;
+    sendState();
+  }
+
+
+  if (checkBoundSensor(newTempPrecise, tempPreciseValue, diffHUM)) {
+    tempPreciseValue = newTempPrecise;
+    sendState();
+  }
+
+
 
   }
